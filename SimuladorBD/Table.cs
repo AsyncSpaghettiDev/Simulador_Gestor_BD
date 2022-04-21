@@ -152,6 +152,18 @@ namespace SimuladorBD {
             foreach (Record record in this.Records)
                 Console.WriteLine(record);
         }
+        public void ListAllWhere( string compressedQuery ) {
+            foreach (Record record in this.Records)
+                Console.WriteLine(record);
+        }
+        public void ListFields( string compressedFields ) {
+            foreach (Record record in this.Records)
+                Console.WriteLine(record);
+        }
+        public void ListFieldsWhere( string compressedFields, string compressedQuery ) {
+            foreach (Record record in this.Records)
+                Console.WriteLine(record);
+        }
         private bool IsDuplicated(string[] values, string toCompare) {
             bool isOnce = false;
             foreach (string item in values) {

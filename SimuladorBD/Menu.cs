@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace SimuladorBD {
@@ -225,9 +226,19 @@ namespace SimuladorBD {
                 Console.WriteLine(queryElement);
             if (uncompressedQuery[ 1 ] == "*")
                 if (!GetCondition(uncompressedQuery, out string compressedCondition))
-                    this.CurrentDatabase.ListAllWhere(uncompressedQuery[ 3 ], compressedCondition);
-                else
                     this.CurrentDatabase.ListAll(uncompressedQuery[ 3 ]);
+                else
+                    this.CurrentDatabase.ListAllWhere(uncompressedQuery[ 3 ], compressedCondition);
+            else {
+                string compressedFields = GetFields(uncompressedQuery);
+                if (!GetCondition(uncompressedQuery, out string compressedCondition))
+                    Console.WriteLine("Sin condicion");
+                //this.CurrentDatabase.ListFieldsWhere(uncompressedQuery[ 3 ], compressedFields , compressedCondition);
+                else
+                    Console.WriteLine(compressedCondition);
+                //this.CurrentDatabase.ListFields(uncompressedQuery[ 3 ], compressedFields);
+                Console.ReadKey();
+            }
             //this.CurrentDatabase.ListAll(uncompressedQuery[ 3 ]);
         }
         bool GetCondition( string[] uncompressedQuery, out string compressedCondition) {
@@ -243,8 +254,15 @@ namespace SimuladorBD {
                     compressedCondition += uncompressedQuery[ i ];
             return indexCondition != -1;
         }
-        string[] GetFields( string[] uncompressedQuery ) {
-            
+        string GetFields( string[] uncompressedQuery ) {
+            string compressedFields = null;
+            uncompressedQuery = uncompressedQuery.Skip(1).ToArray();
+            for (int i = 0; i < uncompressedQuery.Length; i++) {
+                if (uncompressedQuery[ i ] == "DE")
+                    break;
+                compressedFields += uncompressedQuery[ i ].Trim();
+            }
+            return compressedFields;
         }
     }
 }
