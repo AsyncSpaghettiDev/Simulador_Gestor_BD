@@ -97,9 +97,11 @@ namespace SimuladorBD {
                 throw new ExitProgramException();
             if (queryElements[0] == "RETROCEDE")
                 throw new ReturnToMainException();
+            if (queryElements[ 0 ] == "LISTA")
+                EvaluateList(query);
             string queryToAnalyze = queryElements[0] + "\u0020" + queryElements[1];
 
-            if (CurrentAction == CurrentState.databaseUnselected)
+            if (this.CurrentAction == CurrentState.databaseUnselected)
                 switch (queryToAnalyze) {
                     case "CREA BASE":
                         CreateDatabase(queryElements[2]);
@@ -152,10 +154,6 @@ namespace SimuladorBD {
 
                     case "MODIFICA EN":
                         this.CurrentDatabase.Update(query, queryElements[2]);
-                        break;
-
-                    case "LISTA *":
-                        this.CurrentDatabase.ListAll(queryElements[3]);
                         break;
 
                     default:
@@ -220,6 +218,33 @@ namespace SimuladorBD {
             Console.Title = $"Simulador de Base de Datos | By Jonathan Mojica | Root | {name}";
             this.CurrentAction = CurrentState.databaseSelected;
             this.CurrentDatabase = this.Directories.Find(db => db.Location == finalPath);
+        }
+        void EvaluateList( string compressedQuery ) {
+            string[] uncompressedQuery = compressedQuery.ToUpper().Trim().Split('\u0020');
+            foreach (string queryElement in uncompressedQuery)
+                Console.WriteLine(queryElement);
+            if (uncompressedQuery[ 1 ] == "*")
+                if (!GetCondition(uncompressedQuery, out string compressedCondition))
+                    this.CurrentDatabase.ListAllWhere(uncompressedQuery[ 3 ], compressedCondition);
+                else
+                    this.CurrentDatabase.ListAll(uncompressedQuery[ 3 ]);
+            //this.CurrentDatabase.ListAll(uncompressedQuery[ 3 ]);
+        }
+        bool GetCondition( string[] uncompressedQuery, out string compressedCondition) {
+            compressedCondition = null;
+            int indexCondition = -1;
+            for (int i = uncompressedQuery.Length - 1; i >= 0; i--) {
+                if (uncompressedQuery[ i ].Contains("DONDE")) {
+                    indexCondition = i + 1;
+                }
+            }
+            if (indexCondition != -1) 
+                for (int i = indexCondition; i < uncompressedQuery.Length; i++)
+                    compressedCondition += uncompressedQuery[ i ];
+            return indexCondition != -1;
+        }
+        string[] GetFields( string[] uncompressedQuery ) {
+            
         }
     }
 }

@@ -93,5 +93,9 @@ namespace SimuladorBD {
             FindTable(tableName).ListAll();
             Console.ReadKey();
         }
+        public void ListAllWhere( string tableName, string compressedQuery) {
+            FindTable(tableName).ListAll();
+            Console.ReadKey();
+        }
     }
 }
