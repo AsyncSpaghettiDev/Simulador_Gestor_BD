@@ -32,7 +32,7 @@
         public override string FormatedValue(string toFormat) {
             if (!Validate(toFormat))
                 throw new IncorrectFormatException();
-            return toFormat.PadLeft(this.CharacterLength, '\u0020');
+            return toFormat.PadRight(this.CharacterLength, '\u0020');
         }
         public override bool Validate(string toValidate) => toValidate.Length <= this.CharacterLength;
         public override string ToString() {
@@ -62,7 +62,9 @@
         public DateField(string nameField) : base(nameField) { }
         public override bool Validate(string toValidate) => toValidate.Length <= 8;
         public override string FormatedValue(string toFormat) {
-            return toFormat;
+            if (!Validate(toFormat))
+                throw new IncorrectFormatException();
+            return toFormat.PadLeft(8, '\u0020');
         }
         public override string ToString() {
             return $"{this.NameField},fecha";

@@ -5,13 +5,13 @@ using System.Collections.Generic;
 namespace SimuladorBD {
     internal class Database {
         public string Name { get; private set; }
-        public string Path { get; private set; }
+        public string Location { get; private set; }
         public List<Table> Tables { get; private set; }
         readonly private string FullPath;
         public Database(string name, string path) {
             this.Name = name;
-            this.Path = path;
-            this.FullPath = this.Path + '\u005C';
+            this.Location = path;
+            this.FullPath = this.Location + '\u005C';
             LoadTables();
         }
         public void CreateTable(string tableName, string rawData) {
@@ -21,7 +21,7 @@ namespace SimuladorBD {
                 throw new TableAlreadyExistsException();
             File.Create(DataPath).Close();
             File.Create(StructPath).Close();
-            Table newTable = new Table(rawData, StructPath);
+            Table newTable = new Table(rawData, StructPath, DataPath);
             this.Tables.Add(newTable);
             Console.Write("Tabla creada correctamente...");
             Console.ReadKey();
@@ -38,7 +38,10 @@ namespace SimuladorBD {
         private void LoadTables() {
             this.Tables = new List<Table>();
             foreach (string file in Directory.GetFiles(this.FullPath, "*.est")) {
-                Table newTable = new Table(file);
+                string tableName = Path.GetFileNameWithoutExtension(file).ToUpper();
+                string DataPath = this.FullPath + tableName + ".dat";
+                string StructPath = this.FullPath + tableName + ".est";
+                Table newTable = new Table(StructPath, DataPath);
                 newTable.LoadFields(Table.GetRawData(file));
                 this.Tables.Add(newTable);
             }
@@ -66,7 +69,7 @@ namespace SimuladorBD {
         public void Insert(string fullQuery, string tableName) {
             string[] values = Stuff.FormatedData(fullQuery, 3, false);
             FindTable(tableName).Insert(values);
-            Console.WriteLine(string.Join("|", values));
+            Console.WriteLine("Values inserted");
             Console.ReadKey();
         }
     }

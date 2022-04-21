@@ -33,4 +33,7 @@ namespace SimuladorBD {
     internal class IncorrectFormatException : HandledException {
         public IncorrectFormatException() : base("El dato no tiene el formato correcto, intentar otra vez. ") { }
     }
+    internal class DuplicatedFieldInQueryException : HandledException {
+        public DuplicatedFieldInQueryException() : base("Se ha intentado ingresar 2 veces el mismo campo, intenta otra vez. ") { }
+    }
 }

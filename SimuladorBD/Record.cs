@@ -1,20 +1,24 @@
-﻿using System;
+﻿using System.Linq;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimuladorBD {
     internal class Record {
-        public Field FieldType { get; set; }
-        public string Value { get; set; }
-        public Record(Field fieldType, string value) {
-            this.FieldType = fieldType;
-            this.Value = value;
-            if (!this.FieldType.Validate(value))
-                throw new IncorrectFormatException();
+        public List<FieldValue> Values { get; private set; }
+        public List<Field> RecordStruct { get; set; }
+        public string FullPath { get; private set; }
+        public Record(List<Field> recordStruct, List<FieldValue> values) {
+            this.RecordStruct = recordStruct;
+            this.Values = values;
         }
-        public override string ToString() => this.FieldType.FormatedValue(this.Value);
-        
+        private void SortValues() {
+            Values.OrderBy(d => {
+                int index = RecordStruct.IndexOf(d.FieldType);
+                return index == -1 ? int.MaxValue : index;
+            });
+        }
+        override public string ToString() {
+            SortValues();
+            return string.Join(string.Empty, Values);
+        }
     }
 }

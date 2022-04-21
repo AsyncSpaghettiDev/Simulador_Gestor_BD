@@ -207,7 +207,7 @@ namespace SimuladorBD {
 
             Console.Title = $"Simulador de Base de Datos | By Jonathan Mojica | Root | {name}";
             this.CurrentAction = CurrentState.databaseSelected;
-            this.CurrentDatabase = this.Directories.Find(db => db.Path == finalPath);
+            this.CurrentDatabase = this.Directories.Find(db => db.Location == finalPath);
         }
     }
 }

@@ -1,19 +1,26 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace SimuladorBD {
     internal class Table {
         public List<Field> Fields { get; private set; }
-        public string Name { get => Path.GetFileNameWithoutExtension(this.FullPath).ToUpper(); }
-        private string FullPath { get; set; }
-        public Table(string fullPath) {
+        public List<Record> Records { get; private set; }
+        public string Name { get => Path.GetFileNameWithoutExtension(this.StructPath).ToUpper(); }
+        private string StructPath { get; set; }
+        private string DataPath { get; set; }
+        public Table(string structPath, string dataPath) {
             this.Fields = new List<Field>();
-            this.FullPath = fullPath;
+            this.Records = new List<Record>();
+            this.StructPath = structPath;
+            this.DataPath = dataPath;
         }
-        public Table(string rawData, string fullPath) {
+        public Table(string rawData, string structPath, string dataPath) {
             this.Fields = new List<Field>();
-            this.FullPath = fullPath;
+            this.Records = new List<Record>();
+            this.StructPath = structPath;
+            this.DataPath = dataPath;
             AddFields(rawData);
         }
         public void LoadFields(string compressedData) {
@@ -61,12 +68,13 @@ namespace SimuladorBD {
         private void WriteStruct() {
             StreamWriter textOut = null;
             try {
-                textOut = new StreamWriter(new FileStream(this.FullPath, FileMode.Create, FileAccess.Write));
+                textOut = new StreamWriter(new FileStream(this.StructPath, FileMode.Create, FileAccess.Write));
                 foreach (Field dataStruct in this.Fields)
                     textOut.WriteLine(dataStruct.ToString());
             }
             catch (Exception e) {
                 Console.WriteLine(e.ToString());
+                Console.ReadKey();
             }
             finally {
                 if (textOut != null)
@@ -77,15 +85,49 @@ namespace SimuladorBD {
             this.Fields.Remove(this.Fields.Find(field => field.NameField == fieldName));
             WriteStruct();
         }
-        private Field FieldType (string fieldName) => this.Fields.Find (field => field.NameField == fieldName);
+        private Field FindField(string fieldName) => this.Fields.Find(field => field.NameField == fieldName);
         public void Insert(string[] values) {
-            if
+            List<FieldValue> fieldValues = new List<FieldValue>();
+            foreach (string compressedData in values) {
+                string[] uncompressedData = compressedData.Split('=');
+                IsDuplicated(values, uncompressedData[0]);
+                fieldValues.Add(new FieldValue(
+                    FindField(uncompressedData[0].Trim()),
+                    uncompressedData[1].Trim())
+                    );
+            }
+            this.Records.Add(new Record(this.Fields, fieldValues));
+            WriteRecords();
+        }
+        private bool IsDuplicated(string[] values, string toCompare) {
+            bool isOnce = false;
             foreach (string item in values) {
                 string[] uncompressedData = item.Split('=');
-                Field validate = FieldType(uncompressedData[0].Trim());
-                Console.WriteLine(validate.Validate(uncompressedData[1]));
+
+                if (uncompressedData[0].ToUpper().Trim() == toCompare.ToUpper().Trim()) {
+                    if (isOnce)
+                        throw new DuplicatedFieldInQueryException();
+                    isOnce = true;
+                }
             }
-            Console.WriteLine("Values inserted");
+            return false;
+        }
+
+        private void WriteRecords() {
+            StreamWriter textOut = null;
+            try {
+                textOut = new StreamWriter(new FileStream(this.DataPath, FileMode.Create, FileAccess.Write));
+                foreach (Record record in this.Records)
+                    textOut.WriteLine(record.ToString());
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.ToString());
+                Console.ReadKey();
+            }
+            finally {
+                if (textOut != null)
+                    textOut.Close();
+            }
         }
         override public string ToString() {
             return $"{this.Name}\n\u0020\u0020{string.Join("\n\u0020\u0020", this.Fields)}";
