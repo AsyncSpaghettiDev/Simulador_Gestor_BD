@@ -42,7 +42,8 @@ namespace SimuladorBD {
                 string DataPath = this.FullPath + tableName + ".dat";
                 string StructPath = this.FullPath + tableName + ".est";
                 Table newTable = new Table(StructPath, DataPath);
-                newTable.LoadFields(Table.GetRawData(file));
+                newTable.LoadStructure(Table.GetRawStructure(StructPath));
+                newTable.LoadData(Table.GetRawData(DataPath));
                 this.Tables.Add(newTable);
             }
         }
@@ -62,14 +63,14 @@ namespace SimuladorBD {
         }
         public void AddField(string fullQuery, string tableName) {
             string fieldName = Stuff.FormatedData(fullQuery, 3)[0];
-            FindTable(tableName).AddFields(fullQuery);
+            FindTable(tableName).AddNewFields(fullQuery);
             Console.Write($"Campo {fieldName} agregado correctamente...");
             Console.ReadKey();
         }
         public void Insert(string fullQuery, string tableName) {
             string[] values = Stuff.FormatedData(fullQuery, 3, false);
             FindTable(tableName).Insert(values);
-            Console.WriteLine("Values inserted");
+            Console.WriteLine("Nuevo registro agregado.");
             Console.ReadKey();
         }
     }

@@ -5,40 +5,56 @@ using System.Collections.Generic;
 
 namespace SimuladorBD {
     internal class Table {
-        public List<Field> Fields { get; private set; }
+        public List<Field> Structure { get; private set; }
         public List<Record> Records { get; private set; }
         public string Name { get => Path.GetFileNameWithoutExtension(this.StructPath).ToUpper(); }
         private string StructPath { get; set; }
         private string DataPath { get; set; }
+        private int LastFieldIndex = 0;
         public Table(string structPath, string dataPath) {
-            this.Fields = new List<Field>();
+            this.Structure = new List<Field>();
             this.Records = new List<Record>();
             this.StructPath = structPath;
             this.DataPath = dataPath;
         }
         public Table(string rawData, string structPath, string dataPath) {
-            this.Fields = new List<Field>();
+            this.Structure = new List<Field>();
             this.Records = new List<Record>();
             this.StructPath = structPath;
             this.DataPath = dataPath;
             AddFields(rawData);
         }
-        public void LoadFields(string compressedData) {
+        public void LoadStructure(string compressedData) {
             // Uncompress the data and creates an array
             string[] formatedData = compressedData.ToUpper().Split(',');
 
             IdentifyFieldType(1, formatedData, formatedData.Length);
+            AsignFieldsRange();
         }
-        public void AddFields(string rawData) {
+        private void AddFields(string rawData) {
             string[] formatedData = Stuff.FormatedData(rawData, 3);
 
             IdentifyFieldType(1, formatedData, formatedData.Length);
+            AsignFieldsRange();
 
             WriteStruct();
         }
+        public void AddNewFields(string rawData) {
+
+            string[] formatedData = Stuff.FormatedData(rawData, 3);
+
+            IdentifyFieldType(1, formatedData, formatedData.Length);
+            this.LastFieldIndex = 0;
+            AsignFieldsRange();
+
+            foreach (Record record in this.Records)
+                record.UpdateStructure(this.Structure);
+            WriteStruct();
+            WriteRecords();
+        }
         private void IdentifyFieldType(int typeIndex, string[] originalArray, int maxIndex) {
             Field dataField = null;
-            if (this.Fields.Exists(field => field.NameField.ToUpper() == originalArray[typeIndex - 1].ToUpper()))
+            if (this.Structure.Exists(field => field.NameField.ToUpper() == originalArray[typeIndex - 1].ToUpper()))
                 throw new DuplicatedNamefieldException();
             switch (originalArray[typeIndex]) {
                 case "ENTERO":
@@ -61,15 +77,22 @@ namespace SimuladorBD {
                     typeIndex += 2;
                     break;
             }
-            this.Fields.Add(dataField);
+            this.Structure.Add(dataField);
             if (typeIndex < maxIndex)
                 IdentifyFieldType(typeIndex, originalArray, maxIndex);
+        }
+        private void AsignFieldsRange(int index = 0) {
+            this.Structure[index].Start = this.LastFieldIndex;
+            this.LastFieldIndex += this.Structure[index].FieldLength;
+            index++;
+            if (index < this.Structure.Count)
+                AsignFieldsRange(index);
         }
         private void WriteStruct() {
             StreamWriter textOut = null;
             try {
                 textOut = new StreamWriter(new FileStream(this.StructPath, FileMode.Create, FileAccess.Write));
-                foreach (Field dataStruct in this.Fields)
+                foreach (Field dataStruct in this.Structure)
                     textOut.WriteLine(dataStruct.ToString());
             }
             catch (Exception e) {
@@ -82,10 +105,16 @@ namespace SimuladorBD {
             }
         }
         public void DeleteField(string fieldName) {
-            this.Fields.Remove(this.Fields.Find(field => field.NameField == fieldName));
+            Field fieldToDelete = this.Structure.Find(field => field.NameField == fieldName);
+            this.Structure.Remove(fieldToDelete);
+            this.LastFieldIndex = 0;
+            AsignFieldsRange();
+            foreach (Record record in this.Records)
+                record.DeleteField(fieldToDelete, this.Structure);
             WriteStruct();
+            WriteRecords();
         }
-        private Field FindField(string fieldName) => this.Fields.Find(field => field.NameField == fieldName);
+        private Field FindField(string fieldName) => this.Structure.Find(field => field.NameField == fieldName);
         public void Insert(string[] values) {
             List<FieldValue> fieldValues = new List<FieldValue>();
             foreach (string compressedData in values) {
@@ -96,7 +125,7 @@ namespace SimuladorBD {
                     uncompressedData[1].Trim())
                     );
             }
-            this.Records.Add(new Record(this.Fields, fieldValues));
+            this.Records.Add(new Record(this.Structure, fieldValues));
             WriteRecords();
         }
         private bool IsDuplicated(string[] values, string toCompare) {
@@ -129,10 +158,27 @@ namespace SimuladorBD {
                     textOut.Close();
             }
         }
-        override public string ToString() {
-            return $"{this.Name}\n\u0020\u0020{string.Join("\n\u0020\u0020", this.Fields)}";
-        }
-        public static string GetRawData(string fullPath) => string.Join(",", File.ReadAllLines(fullPath));
+        public void LoadData(string[] compressedData) {
+            foreach (string compressedRecord in compressedData) {
+                char[] uncompressedRecord = compressedRecord.ToCharArray();
+                List<FieldValue> fieldList = new List<FieldValue>();
 
+                foreach(Field structuralField in this.Structure) {
+                    string fieldValue = new string(
+                        uncompressedRecord.
+                    Skip(structuralField.Start).
+                    Take(structuralField.FieldLength).
+                    ToArray()
+                    );
+                    fieldList.Add(new FieldValue(structuralField, fieldValue));
+                }
+                this.Records.Add(new Record(this.Structure, fieldList));
+            }
+        }
+        override public string ToString() {
+            return $"{this.Name}\n\u0020\u0020{string.Join("\n\u0020\u0020", this.Structure)}";
+        }
+        public static string GetRawStructure(string fullPath) => string.Join(",", File.ReadAllLines(fullPath));
+        public static string[] GetRawData(string fullPath) => File.ReadAllLines(fullPath);
     }
 }

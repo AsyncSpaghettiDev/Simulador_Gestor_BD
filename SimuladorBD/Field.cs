@@ -1,8 +1,9 @@
 ﻿namespace SimuladorBD {
     internal abstract class Field {
         public string NameField { get; protected set; }
+        public abstract int FieldLength { get; }
         public int Start { get; set; }
-        public int End { get; set; }
+        public int End => this.Start + this.FieldLength - 1;
         public Field(string nameField) {
             this.NameField = nameField;
         }
@@ -11,6 +12,7 @@
     }
     internal class IntegerField : Field {
         public int IntLength { get; private set; }
+        public override int FieldLength => this.IntLength;
         public IntegerField(string nameField, int length) : base(nameField) {
             this.IntLength = length;
         }
@@ -18,7 +20,7 @@
             if (!Validate(toFormat)) throw new IncorrectFormatException();
             return toFormat.PadLeft(this.IntLength, '\u0020');
         }
-        public override bool Validate(string toValidate) => toValidate.Length <= this.IntLength && int.TryParse(toValidate, out _);
+        public override bool Validate(string toValidate) => toValidate.Length <= this.IntLength && toValidate.Trim() == string.Empty || int.TryParse(toValidate, out _);
         public override string ToString() {
             return $"{this.NameField},entero,{this.IntLength}";
         }
@@ -26,6 +28,7 @@
     }
     internal class CharacterField : Field {
         public int CharacterLength { get; private set; }
+        public override int FieldLength => this.CharacterLength;
         public CharacterField(string nameField, int length) : base(nameField) {
             this.CharacterLength = length;
         }
@@ -42,6 +45,7 @@
     internal class DecimalField : Field {
         public int IntLength { get; private set; }
         public int DecimalLength { get; private set; }
+        public override int FieldLength => this.IntLength + this.DecimalLength;
         public DecimalField(string nameField, int intLength, int decimalLength) : base(nameField) {
             this.IntLength = intLength;
             this.DecimalLength = decimalLength;
@@ -53,12 +57,13 @@
         }
         public override bool Validate(string toValidate) =>
             toValidate.Length <= this.DecimalLength + this.IntLength
-            && int.TryParse(toValidate, out _);
+            && toValidate.Trim() == string.Empty || int.TryParse(toValidate, out _);
         public override string ToString() {
             return $"{this.NameField},decimal,{this.IntLength},{this.DecimalLength}";
         }
     }
     internal class DateField : Field {
+        public override int FieldLength => 8;
         public DateField(string nameField) : base(nameField) { }
         public override bool Validate(string toValidate) => toValidate.Length <= 8;
         public override string FormatedValue(string toFormat) {
