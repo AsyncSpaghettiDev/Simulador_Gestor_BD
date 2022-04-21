@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace SimuladorBD {
@@ -70,7 +71,26 @@ namespace SimuladorBD {
         public void Insert(string fullQuery, string tableName) {
             string[] values = Stuff.FormatedData(fullQuery, 3, false);
             FindTable(tableName).Insert(values);
-            Console.WriteLine("Nuevo registro agregado.");
+            Console.Write("Nuevo registro agregado.");
+            Console.ReadKey();
+        }
+        public void Delete(string fullQuery, string tableName) {
+            string[] values = Stuff.FormatedData(fullQuery, 4);
+            int deletedRecords = FindTable(tableName).Delete(values[0]);
+            Console.Write($"Se han eliminado {deletedRecords} registros.");
+            Console.ReadKey();
+        }
+        public void Update(string fullQuery, string tableName) {
+            string[] values = Stuff.FormatedData(fullQuery, 3, false);
+            char[] value = values[values.Length - 1].Trim().ToCharArray().Skip(5).ToArray();
+            string condition = new string(value);
+            values = values.Take(values.Length - 1).ToArray();
+            int updatedRecords = FindTable(tableName).Update(condition, values);
+            Console.Write($"Se han actualizado {updatedRecords} registros.");
+            Console.ReadKey();
+        }
+        public void ListAll(string tableName) {
+            FindTable(tableName).ListAll();
             Console.ReadKey();
         }
     }

@@ -128,6 +128,30 @@ namespace SimuladorBD {
             this.Records.Add(new Record(this.Structure, fieldValues));
             WriteRecords();
         }
+        public int Delete(string compressedCondition) {
+            string[] uncompressedCondition = compressedCondition.Split('=');
+            string fieldName = uncompressedCondition[0].Trim().ToUpper();
+            string fieldValue = uncompressedCondition[1].Trim();
+            int deletedRecords = this.Records.RemoveAll(record => record.Match(fieldName, fieldValue));
+            
+            WriteRecords();
+            return deletedRecords;
+        }
+        public int Update(string compressedCondition, string[] valuesToUpdate) {
+            string[] uncompressedCondition = compressedCondition.Split('=');
+            string fieldName = uncompressedCondition[0].Trim().ToUpper();
+            string fieldValue = uncompressedCondition[1].Trim();
+
+            List<Record> recordsToUpdate = this.Records.FindAll(record => record.Match(fieldName, fieldValue));
+            foreach (Record recordToUpdate in recordsToUpdate)
+                recordToUpdate.UpdateRecord(valuesToUpdate);
+            WriteRecords();
+            return recordsToUpdate.Count;
+        }
+        public void ListAll() {
+            foreach (Record record in this.Records)
+                Console.WriteLine(record);
+        }
         private bool IsDuplicated(string[] values, string toCompare) {
             bool isOnce = false;
             foreach (string item in values) {
@@ -163,7 +187,7 @@ namespace SimuladorBD {
                 char[] uncompressedRecord = compressedRecord.ToCharArray();
                 List<FieldValue> fieldList = new List<FieldValue>();
 
-                foreach(Field structuralField in this.Structure) {
+                foreach (Field structuralField in this.Structure) {
                     string fieldValue = new string(
                         uncompressedRecord.
                     Skip(structuralField.Start).

@@ -146,6 +146,18 @@ namespace SimuladorBD {
                         this.CurrentDatabase.Insert(query, queryElements[2].Replace(",", "\u0020").Trim());
                         break;
 
+                    case "ELIMINA EN":
+                        this.CurrentDatabase.Delete(query, queryElements[2]);
+                        break;
+
+                    case "MODIFICA EN":
+                        this.CurrentDatabase.Update(query, queryElements[2]);
+                        break;
+
+                    case "LISTA *":
+                        this.CurrentDatabase.ListAll(queryElements[3]);
+                        break;
+
                     default:
                         throw new InstructionNotFoundException();
                 }
