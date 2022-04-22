@@ -152,15 +152,21 @@ namespace SimuladorBD {
             foreach (Record record in this.Records)
                 Console.WriteLine(record);
         }
-        public void ListAllWhere( string compressedQuery ) {
-            foreach (Record record in this.Records)
+        public void ListAllWhere( string compressedCondition ) {
+            string[] uncompressedCondition = compressedCondition.Split('=');
+            string fieldName = uncompressedCondition[ 0 ].Trim().ToUpper();
+            string fieldValue = uncompressedCondition[ 1 ].Trim();
+            List<Record> filteredRecords = this.Records.FindAll(record => record.Match(fieldName, fieldValue));
+            foreach (Record record in filteredRecords)
                 Console.WriteLine(record);
         }
         public void ListFields( string compressedFields ) {
+            Console.WriteLine(compressedFields);
+            Console.ReadKey();
             foreach (Record record in this.Records)
                 Console.WriteLine(record);
         }
-        public void ListFieldsWhere( string compressedFields, string compressedQuery ) {
+        public void ListFieldsWhere( string compressedFields, string compressedCondition ) {
             foreach (Record record in this.Records)
                 Console.WriteLine(record);
         }

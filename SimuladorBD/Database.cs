@@ -93,8 +93,8 @@ namespace SimuladorBD {
             FindTable(tableName).ListAll();
             Console.ReadKey();
         }
-        public void ListAllWhere( string tableName, string compressedQuery) {
-            FindTable(tableName).ListAllWhere(compressedQuery);
+        public void ListAllWhere( string tableName, string compressedCondition ) {
+            FindTable(tableName).ListAllWhere(compressedCondition);
             Console.ReadKey();
         }
 
@@ -102,8 +102,8 @@ namespace SimuladorBD {
             FindTable(tableName).ListFields(compressedFields);
             Console.ReadKey();
         }
-        public void ListFieldsWhere( string tableName, string compressedFields, string compressedQuery ) {
-            FindTable(tableName).ListFieldsWhere(compressedFields, compressedQuery);
+        public void ListFieldsWhere( string tableName, string compressedFields, string compressedCondition ) {
+            FindTable(tableName).ListFieldsWhere(compressedFields, compressedCondition);
             Console.ReadKey();
         }
     }
