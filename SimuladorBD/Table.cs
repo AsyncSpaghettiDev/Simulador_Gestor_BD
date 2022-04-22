@@ -161,14 +161,19 @@ namespace SimuladorBD {
                 Console.WriteLine(record);
         }
         public void ListFields( string compressedFields ) {
-            Console.WriteLine(compressedFields);
-            Console.ReadKey();
+            string[] uncompressedFields = compressedFields.Split(',');
             foreach (Record record in this.Records)
-                Console.WriteLine(record);
+                Console.WriteLine(record.GetFields(uncompressedFields));
         }
         public void ListFieldsWhere( string compressedFields, string compressedCondition ) {
-            foreach (Record record in this.Records)
-                Console.WriteLine(record);
+            string[] uncompressedFields = compressedFields.Split(',');
+            foreach (Record record in this.Records) {
+                string filteredRecord = record.GetFieldsWhere(uncompressedFields, compressedCondition);
+                if (filteredRecord != null)
+                    Console.WriteLine(filteredRecord);
+                else
+                    continue;
+            }
         }
         private bool IsDuplicated(string[] values, string toCompare) {
             bool isOnce = false;

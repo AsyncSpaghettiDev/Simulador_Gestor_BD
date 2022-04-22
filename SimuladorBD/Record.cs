@@ -18,8 +18,14 @@ namespace SimuladorBD {
                 return index == -1 ? int.MaxValue : index;
             });
         }
+        private void SortValues(ref string[] toSort) {
+            toSort.OrderBy(d => {
+                int index = RecordStruct.FindIndex(search => search.NameField == d);
+                return index == -1 ? int.MaxValue : index;
+            });
+        }
         public void DeleteField(Field fieldToDelete, List<Field> newRecordStruct) {
-            foreach(FieldValue fieldValue in this.Values) {
+            foreach (FieldValue fieldValue in this.Values) {
                 if (fieldValue.FieldType.NameField == fieldToDelete.NameField) {
                     this.Values.Remove(fieldValue);
                     break;
@@ -31,7 +37,7 @@ namespace SimuladorBD {
         public bool Match(string fieldName, string fieldValue) =>
             this.Values.Exists(value => value.FieldType.NameField == fieldName && value.Value == fieldValue);
         public void UpdateRecord(string[] valuesToUpdate) {
-            foreach(string compressedNewValue in valuesToUpdate) {
+            foreach (string compressedNewValue in valuesToUpdate) {
                 string[] uncompressedNewValues = compressedNewValue.Split('=');
                 string fieldNewName = uncompressedNewValues[0].Trim().ToUpper();
                 string fieldNewValue = uncompressedNewValues[1].Trim();
@@ -46,12 +52,44 @@ namespace SimuladorBD {
             }
         }
         public void UpdateStructure(List<Field> newRecordStruct) => this.RecordStruct = newRecordStruct;
+        public string GetFields(string[] fields) {
+            SortValues();
+            SortValues(ref fields);
+            List<FieldValue> recordToWrite = new List<FieldValue>();
+            foreach (string query in fields) {
+                Field field = this.RecordStruct.Find(fieldType => fieldType.NameField == query);
+                FieldValue toWrite = this.Values.Find(fieldValue => fieldValue.FieldType == field);
+                
+                recordToWrite.Add(toWrite ?? new FieldValue(field, string.Empty));
+            }
+            return string.Join(string.Empty, recordToWrite);
+        }
+        public string GetFieldsWhere(string[] fields, string compressedCondition) {
+            string[] uncompressedCondition = compressedCondition.Split('=');
+            string searchFieldName = uncompressedCondition[0].Trim().ToUpper();
+            string searchFieldValue = uncompressedCondition[1].Trim();
+            if (!Match(searchFieldName, searchFieldValue))
+                return null;
+
+            List<FieldValue> recordToWrite = new List<FieldValue>();
+            SortValues();
+            SortValues(ref fields);
+            foreach (string query in fields) {
+                Field field = this.RecordStruct.Find(fieldType => fieldType.NameField == query);
+                FieldValue toWrite = this.Values.Find(fieldValue => fieldValue.FieldType == field);
+
+                recordToWrite.Add(toWrite ?? new FieldValue(field, string.Empty));
+            }
+            return string.Join(string.Empty, recordToWrite);
+        }
         override public string ToString() {
             SortValues();
             List<FieldValue> recordToWrite = new List<FieldValue>();
             int currentValueIndex = 0;
-            for(int i = 0; i < this.RecordStruct.Count; i++) {
-                if(currentValueIndex < this.Values.Count && this.RecordStruct[i].NameField == this.Values[currentValueIndex].FieldType.NameField) {
+            for (int i = 0; i < this.RecordStruct.Count; i++) {
+                bool isOffSet = currentValueIndex < this.Values.Count;
+                bool fieldExists = this.RecordStruct[i].NameField == this.Values[currentValueIndex].FieldType.NameField;
+                if (isOffSet && fieldExists) {
                     recordToWrite.Add(this.Values[currentValueIndex]);
                     currentValueIndex++;
                     continue;
