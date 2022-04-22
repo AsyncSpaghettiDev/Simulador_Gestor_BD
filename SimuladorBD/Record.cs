@@ -87,9 +87,7 @@ namespace SimuladorBD {
             List<FieldValue> recordToWrite = new List<FieldValue>();
             int currentValueIndex = 0;
             for (int i = 0; i < this.RecordStruct.Count; i++) {
-                bool isOffSet = currentValueIndex < this.Values.Count;
-                bool fieldExists = this.RecordStruct[i].NameField == this.Values[currentValueIndex].FieldType.NameField;
-                if (isOffSet && fieldExists) {
+                if (currentValueIndex < this.Values.Count && this.RecordStruct[i].NameField == this.Values[currentValueIndex].FieldType.NameField) {
                     recordToWrite.Add(this.Values[currentValueIndex]);
                     currentValueIndex++;
                     continue;

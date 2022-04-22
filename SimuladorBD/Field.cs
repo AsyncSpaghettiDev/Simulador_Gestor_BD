@@ -20,7 +20,7 @@
             if (!Validate(toFormat)) throw new IncorrectFormatException();
             return toFormat.PadLeft(this.IntLength, '\u0020');
         }
-        public override bool Validate(string toValidate) => toValidate.Length <= this.IntLength && toValidate.Trim() == string.Empty || int.TryParse(toValidate, out _);
+        public override bool Validate(string toValidate) => toValidate.Length <= this.IntLength && toValidate.Trim() == string.Empty || long.TryParse(toValidate, out _);
         public override string ToString() {
             return $"{this.NameField},entero,{this.IntLength}";
         }
@@ -57,7 +57,7 @@
         }
         public override bool Validate(string toValidate) =>
             toValidate.Length <= this.DecimalLength + this.IntLength
-            && toValidate.Trim() == string.Empty || int.TryParse(toValidate, out _);
+            && toValidate.Trim() == string.Empty || long.TryParse(toValidate, out _);
         public override string ToString() {
             return $"{this.NameField},decimal,{this.IntLength},{this.DecimalLength}";
         }
@@ -65,7 +65,16 @@
     internal class DateField : Field {
         public override int FieldLength => 8;
         public DateField(string nameField) : base(nameField) { }
-        public override bool Validate(string toValidate) => toValidate.Length <= 8;
+        public override bool Validate(string toValidate) {
+            if (toValidate.Trim() == string.Empty)
+                return true;
+            char[] uncompressedDate = toValidate.ToCharArray();
+            string year = new string(uncompressedDate, 0, 4);
+            string month = new string(uncompressedDate, 4, 2);
+            string day = new string(uncompressedDate, 6, 2);
+            string newDate = $"{year}-{month}-{day}";
+            return toValidate.Length <= 8 && System.DateTime.TryParse(newDate, out _);
+        }
         public override string FormatedValue(string toFormat) {
             if (!Validate(toFormat))
                 throw new IncorrectFormatException();
