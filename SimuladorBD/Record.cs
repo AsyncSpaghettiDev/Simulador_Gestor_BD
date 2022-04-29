@@ -35,7 +35,7 @@ namespace SimuladorBD {
         }
 
         public bool Match(string fieldName, string fieldValue) =>
-            this.Values.Exists(value => value.FieldType.NameField == fieldName && value.Value == fieldValue);
+            this.Values.Exists(value => value.FieldType.NameField.Trim() == fieldName && value.Value.Trim() == fieldValue);
         public void UpdateRecord(string[] valuesToUpdate) {
             foreach (string compressedNewValue in valuesToUpdate) {
                 string[] uncompressedNewValues = compressedNewValue.Split('=');
